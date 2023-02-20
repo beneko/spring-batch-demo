@@ -2,6 +2,8 @@ package com.example.springbatchdemo.config;
 
 import com.example.springbatchdemo.model.FlightTicket;
 import com.example.springbatchdemo.service.CustomItemProcessor;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.item.*;
@@ -10,6 +12,7 @@ import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.batch.item.xml.StaxEventItemWriter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
@@ -24,9 +27,9 @@ public class SpringBatchConfig {
         this.stepBuilderFactory = stepBuilderFactory;
     }
 
-    private JobBuilderFactory jobBuilderFactory;
+    private final JobBuilderFactory jobBuilderFactory;
 
-    private StepBuilderFactory stepBuilderFactory;
+    private final StepBuilderFactory stepBuilderFactory;
 
     @Value("read/entries.csv")
     private Resource inputResource;
@@ -77,5 +80,24 @@ public class SpringBatchConfig {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
         marshaller.setClassesToBeBound(FlightTicket.class);
         return marshaller;
+    }
+
+    @Bean
+    protected Step step1(ItemReader<FlightTicket> itemReader,
+                         ItemWriter<FlightTicket> itemWriter,
+                         ItemProcessor<FlightTicket, FlightTicket> itemProcessor) {
+        return stepBuilderFactory.get("step1")
+                .<FlightTicket, FlightTicket>chunk(10)
+                .reader(itemReader)
+                .processor(itemProcessor)
+                .writer(itemWriter)
+                .build();
+    }
+
+    @Bean(name = "CSVtoXML")
+    public Job job(@Qualifier("step1") Step step1) {
+       return jobBuilderFactory.get("CSVtoXML")
+               .start(step1)
+               .build();
     }
 }
