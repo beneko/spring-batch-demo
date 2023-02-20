@@ -1,8 +1,10 @@
 package com.example.springbatchdemo.config;
 
 import com.example.springbatchdemo.model.FlightTicket;
+import com.example.springbatchdemo.service.CustomItemProcessor;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ParseException;
 import org.springframework.batch.item.UnexpectedInputException;
@@ -15,6 +17,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 
 public class SpringBatchConfig {
+    public SpringBatchConfig(JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory) {
+        this.jobBuilderFactory = jobBuilderFactory;
+        this.stepBuilderFactory = stepBuilderFactory;
+    }
 
     private JobBuilderFactory jobBuilderFactory;
 
@@ -48,5 +54,10 @@ public class SpringBatchConfig {
         reader.setLineMapper(defaultLineMapper);
 
         return reader;
+    }
+
+    @Bean
+    public ItemProcessor<FlightTicket, FlightTicket> itemProcessor() {
+        return new CustomItemProcessor();
     }
 }
