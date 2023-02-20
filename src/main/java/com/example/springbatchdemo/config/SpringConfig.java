@@ -6,8 +6,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.init.DataSourceInitializer;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
 import javax.sql.DataSource;
+import java.net.MalformedURLException;
 
 @Configuration
 @EnableBatchProcessing
@@ -31,5 +34,19 @@ public class SpringConfig {
         return dataSource;
     }
 
+    @Bean
+    public DataSourceInitializer dataSourceInitializer(DataSource dataSource) throws MalformedURLException {
+        ResourceDatabasePopulator databasePopulator = new ResourceDatabasePopulator();
 
+        databasePopulator.addScript(dropRepositoryTables);
+        databasePopulator.addScript(dataRepositorySchema);
+        databasePopulator.setIgnoreFailedDrops(true);
+
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        initializer.setDatabasePopulator(databasePopulator);
+
+        return initializer;
+
+    }
 }
